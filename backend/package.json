@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "dev": "supabase start",
+        "dev": "node scripts/smart-start.js",
         "stop": "supabase stop",
         "status": "supabase status",
         "reset": "supabase db reset",
