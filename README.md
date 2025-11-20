@@ -1,4 +1,6 @@
-# Next.js PWA Starter Template
+# ![Supanext](.github/supanext.png)
+
+# SupaNext - Next.js + Supabase PWA Starter Template
 
 A production-ready starter template for building modern web applications with PWA capabilities, authentication, and a monorepo structure.
 
