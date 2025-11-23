@@ -1,21 +1,21 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Play, Pause, SkipForward, CheckCircle2, RotateCcw, Home, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { saveSession } from "@/app/actions/sessions";
 
 interface Stretch {
     id: string;
     name: string;
-    image_url?: string;
+    image_url?: string | null;
     instructions: string[];
-    benefits?: string;
-    precautions?: string;
+    benefits?: string | null;
+    precautions?: string | null;
 }
 
 interface RoutineStretch {
@@ -25,6 +25,7 @@ interface RoutineStretch {
 }
 
 interface SessionPlayerProps {
+    routineId: string;
     routineName: string;
     stretches: RoutineStretch[];
 }
@@ -37,8 +38,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 
-export function SessionPlayer({ routineName, stretches }: SessionPlayerProps) {
-    const router = useRouter();
+export function SessionPlayer({ routineId, routineName, stretches }: SessionPlayerProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isInterval, setIsInterval] = useState(true); // Start with an interval
     const [timeLeft, setTimeLeft] = useState(10); // 10s initial interval
@@ -50,12 +50,53 @@ export function SessionPlayer({ routineName, stretches }: SessionPlayerProps) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [wasActiveBeforeDialog, setWasActiveBeforeDialog] = useState(false);
 
+    // Session tracking
+    const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+
     const currentStretch = stretches[currentIndex];
     const sessionProgress = ((currentIndex) / stretches.length) * 100;
 
     // Calculate timer progress
     const maxTime = isInterval ? 10 : currentStretch.duration;
     const timerProgress = (timeLeft / maxTime) * 100;
+
+    const handleNext = useCallback(async () => {
+        if (isInterval) {
+            // Skip interval -> Start Stretch
+            setIsInterval(false);
+            setTimeLeft(currentStretch.duration);
+            setIsActive(true);
+        } else {
+            // Finish stretch -> Start Next Interval
+            if (currentIndex < stretches.length - 1) {
+                setCurrentIndex((prev) => prev + 1);
+                setIsInterval(true);
+                setTimeLeft(10); // 10s interval
+                setIsActive(true);
+            } else {
+                // Session complete - save to database
+                setIsActive(false);
+
+                if (sessionStartTime) {
+                    try {
+                        await saveSession({
+                            routineId,
+                            routineName,
+                            startTime: sessionStartTime,
+                            endTime: new Date(),
+                            duration: totalTimeElapsed,
+                            completionPercentage: 100,
+                        });
+                    } catch (error) {
+                        console.error("Failed to save session:", error);
+                        // Continue anyway - don't block user
+                    }
+                }
+
+                setIsCompleted(true);
+            }
+        }
+    }, [isInterval, currentStretch.duration, currentIndex, stretches.length, sessionStartTime, routineId, routineName, totalTimeElapsed]);
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -79,27 +120,14 @@ export function SessionPlayer({ routineName, stretches }: SessionPlayerProps) {
         }
 
         return () => clearInterval(interval);
-    }, [isActive, timeLeft, isInterval, currentStretch]);
+    }, [isActive, timeLeft, isInterval, currentStretch, handleNext]);
 
-    const handleNext = () => {
-        if (isInterval) {
-            // Skip interval -> Start Stretch
-            setIsInterval(false);
-            setTimeLeft(currentStretch.duration);
-            setIsActive(true);
-        } else {
-            // Finish stretch -> Start Next Interval
-            if (currentIndex < stretches.length - 1) {
-                setCurrentIndex((prev) => prev + 1);
-                setIsInterval(true);
-                setTimeLeft(10); // 10s interval
-                setIsActive(true);
-            } else {
-                setIsActive(false);
-                setIsCompleted(true);
-            }
+    // Track session start time
+    useEffect(() => {
+        if (isActive && !sessionStartTime) {
+            setSessionStartTime(new Date());
         }
-    };
+    }, [isActive, sessionStartTime]);
 
     const handlePrevious = () => {
         const currentDuration = currentStretch.duration;

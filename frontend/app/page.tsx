@@ -41,39 +41,59 @@ export default async function Home() {
     console.error("Unexpected error:", error);
   }
 
+  // Fetch user stats
+  let stats = { totalSessions: 0, totalMinutes: 0, streak: 0 };
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      const { getUserStats } = await import("@/app/actions/sessions");
+      stats = await getUserStats(user.id);
+    }
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+  }
+
   return (
     <div className="space-y-8">
       {/* Header Section */}
       <section className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Welcome Back! 👋</h1>
         <p className="text-muted-foreground">
-          Ready to move your body? Let's get stretching.
+          Ready to move your body? Let&apos;s get stretching.
         </p>
       </section>
 
-      {/* Stats Overview (Placeholder) */}
+      {/* Stats Overview */}
       <section className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border bg-card p-4 text-center shadow-sm">
-          <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-600 dark:bg-orange-900/20">
-            <Flame className="h-4 w-4" />
+        <Link href="/activity" className="block">
+          <div className="rounded-xl border bg-card p-4 text-center shadow-sm transition-colors hover:bg-muted/50 cursor-pointer">
+            <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-600 dark:bg-orange-900/20">
+              <Flame className="h-4 w-4" />
+            </div>
+            <div className="text-2xl font-bold">{stats.streak}</div>
+            <div className="text-xs text-muted-foreground">Day Streak</div>
           </div>
-          <div className="text-2xl font-bold">0</div>
-          <div className="text-xs text-muted-foreground">Day Streak</div>
-        </div>
-        <div className="rounded-xl border bg-card p-4 text-center shadow-sm">
-          <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/20">
-            <Trophy className="h-4 w-4" />
+        </Link>
+        <Link href="/activity" className="block">
+          <div className="rounded-xl border bg-card p-4 text-center shadow-sm transition-colors hover:bg-muted/50 cursor-pointer">
+            <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/20">
+              <Trophy className="h-4 w-4" />
+            </div>
+            <div className="text-2xl font-bold">{stats.totalSessions}</div>
+            <div className="text-xs text-muted-foreground">Sessions</div>
           </div>
-          <div className="text-2xl font-bold">0</div>
-          <div className="text-xs text-muted-foreground">Sessions</div>
-        </div>
-        <div className="rounded-xl border bg-card p-4 text-center shadow-sm">
-          <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/20">
-            <Calendar className="h-4 w-4" />
+        </Link>
+        <Link href="/activity" className="block">
+          <div className="rounded-xl border bg-card p-4 text-center shadow-sm transition-colors hover:bg-muted/50 cursor-pointer">
+            <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/20">
+              <Calendar className="h-4 w-4" />
+            </div>
+            <div className="text-2xl font-bold">{stats.totalMinutes}m</div>
+            <div className="text-xs text-muted-foreground">Time Spent</div>
           </div>
-          <div className="text-2xl font-bold">0m</div>
-          <div className="text-xs text-muted-foreground">Time Spent</div>
-        </div>
+        </Link>
       </section>
 
       {/* Featured Routines */}

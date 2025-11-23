@@ -6,6 +6,19 @@ interface PageProps {
     params: Promise<{ id: string }>;
 }
 
+type RoutineStretchWithStretch = {
+    id: string;
+    duration: number;
+    stretch: {
+        id: string;
+        name: string;
+        image_url: string | null;
+        instructions: string[];
+        benefits: string | null;
+        precautions: string | null;
+    };
+};
+
 export default async function SessionPage({ params }: PageProps) {
     const { id } = await params;
     const supabase = await createClient();
@@ -50,8 +63,9 @@ export default async function SessionPage({ params }: PageProps) {
     return (
         <div className="h-full">
             <SessionPlayer
+                routineId={id}
                 routineName={routine.name}
-                stretches={routineStretches as any}
+                stretches={routineStretches as RoutineStretchWithStretch[]}
             />
         </div>
     );

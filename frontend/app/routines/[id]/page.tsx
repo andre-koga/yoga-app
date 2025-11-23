@@ -1,14 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Dumbbell, Play, ArrowLeft, Layers } from "lucide-react";
+import { Clock, Play, ArrowLeft, Layers } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { Tables } from "@/lib/database.types";
 
 interface PageProps {
     params: Promise<{ id: string }>;
 }
+
+type RoutineStretchWithStretch = Tables<"routine_stretches"> & {
+    stretch: Tables<"stretches">;
+};
 
 export default async function RoutineDetailsPage({ params }: PageProps) {
     const { id } = await params;
@@ -26,7 +31,7 @@ export default async function RoutineDetailsPage({ params }: PageProps) {
     }
 
     // Fetch stretches for this routine
-    const { data: routineStretches, error: stretchesError } = await supabase
+    const { data: routineStretches } = await supabase
         .from("routine_stretches")
         .select(`
       *,
@@ -92,7 +97,7 @@ export default async function RoutineDetailsPage({ params }: PageProps) {
             <div className="space-y-4">
                 <h2 className="text-xl font-semibold">Routine Sequence</h2>
                 <div className="space-y-3">
-                    {routineStretches?.map((item: any, index) => (
+                    {routineStretches?.map((item: RoutineStretchWithStretch, index: number) => (
                         <Link
                             key={item.id}
                             href={`/stretches/${item.stretch.id}`}

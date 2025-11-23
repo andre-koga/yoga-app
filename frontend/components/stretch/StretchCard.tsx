@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { Clock, BarChart } from "lucide-react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Clock } from "lucide-react";
+import { Card, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface StretchCardProps {
