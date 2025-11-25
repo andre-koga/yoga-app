@@ -11,24 +11,24 @@ export function ActivityCalendar({ sessionDates }: ActivityCalendarProps) {
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     // Convert session dates to date strings for comparison
+    // Use local date string to avoid timezone issues with toISOString
     const sessionDateStrings = new Set(
-        sessionDates.map(date => date.toISOString().split('T')[0])
+        sessionDates.map(date => {
+            const d = new Date(date);
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        })
     );
 
     // Custom modifiers for styling
     const modifiers = {
         session: (date: Date) => {
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
             return sessionDateStrings.has(dateStr);
         },
     };
 
-    const modifiersStyles = {
-        session: {
-            backgroundColor: 'hsl(var(--primary))',
-            color: 'hsl(var(--primary-foreground))',
-            fontWeight: 'bold',
-        },
+    const modifiersClassNames = {
+        session: "bg-green-600 text-primary-foreground !rounded font-bold hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
     };
 
     return (
@@ -38,8 +38,8 @@ export function ActivityCalendar({ sessionDates }: ActivityCalendarProps) {
                 month={currentMonth}
                 onMonthChange={setCurrentMonth}
                 modifiers={modifiers}
-                modifiersStyles={modifiersStyles}
-                className="rounded-md border w-full"
+                modifiersClassNames={modifiersClassNames}
+                className="w-full"
             />
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
