@@ -19,6 +19,10 @@ type RoutineStretchWithStretch = {
     };
 };
 
+type RawRoutineStretch = Omit<RoutineStretchWithStretch, "stretch"> & {
+    stretch: RoutineStretchWithStretch["stretch"] | RoutineStretchWithStretch["stretch"][];
+};
+
 export default async function SessionPage({ params }: PageProps) {
     const { id } = await params;
     const supabase = await createClient();
@@ -60,12 +64,18 @@ export default async function SessionPage({ params }: PageProps) {
         );
     }
 
+    // Transform the data to match the expected type
+    const formattedStretches = routineStretches?.map((rs: RawRoutineStretch) => ({
+        ...rs,
+        stretch: Array.isArray(rs.stretch) ? rs.stretch[0] : rs.stretch,
+    })) as RoutineStretchWithStretch[];
+
     return (
         <div className="h-full">
             <SessionPlayer
                 routineId={id}
                 routineName={routine.name}
-                stretches={routineStretches as RoutineStretchWithStretch[]}
+                stretches={formattedStretches}
             />
         </div>
     );
